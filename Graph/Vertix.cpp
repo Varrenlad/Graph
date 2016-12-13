@@ -42,15 +42,11 @@ void Vertix::Load(std::istream &st) {
 	while (!st.eof()) {
 		st >> temp >> temp1;
 		i = rand() % RANDOM_ENUM; //alas, we don't have weight, so we generate them
-		//if (temp != temp1) { //remove loops
 			adj[temp].push_back(std::make_pair(temp1, i));
 			adj[temp1].push_back(std::make_pair(temp, i));
-		//} 
-			++j;	
-			if (j % 51 == 0) {
-				//system("cls");
-				std::cout << "Loading " << j << "/" << edges << std::endl;
-			}
+			++j;
+			if (j % 256 == 0)
+				std::cout << "Loading " << j << "/" << edges << "\n";
 	}
 }
 
@@ -97,4 +93,66 @@ size_t Vertix::Size() {
 
 size_t Vertix::operator[](size_t i) {
 	return distArr[i];
+}
+
+void Vertix::SCC() {
+	std::vector<long long> *temp = new std::vector<long long>[nodes];
+	size_t i;
+	for (i = 0; i < nodes; ++i) {
+		for (size_t j = 0; j < adj[i].size(); ++j) {
+			temp[i].push_back(adj[i][j].first);
+		}
+	}
+	adjL = new std::list<long long>[nodes];
+	for (i = 0; i < nodes; ++i)
+		std::copy(temp[i].begin(), temp[i].end(), std::back_inserter(adjL[i]));
+	delete[] temp;
+	this->_SCC();
+	delete[] adjL;
+}
+
+void Vertix::SCCUtil(int u, int disc[], int low[], std::stack<long long> *st,
+	bool stackMember[]) {
+	static int time = 0;
+	disc[u] = low[u] = ++time;
+	st->push(u);
+	stackMember[u] = true;
+	std::list<long long>::iterator i;
+	for (i = adjL[u].begin(); i != adjL[u].end(); ++i) {
+		long long v = *i;
+		if (disc[v] == -1) {
+			SCCUtil(v, disc, low, st, stackMember);
+			low[u] = std::min(low[u], low[v]);
+		}
+		else if (stackMember[v] == true)
+			low[u] = std::min(low[u], disc[v]);
+	}
+	long long w = 0;
+	if (low[u] == disc[u]) {
+		while (st->top() != u) {
+			w = st->top();
+			std::cout << w << " ";
+			stackMember[w] = false;
+			st->pop();
+		}
+		w = st->top();
+		std::cout << w << "\n";
+		stackMember[w] = false;
+		st->pop();
+	}
+}
+
+void Vertix::_SCC() {
+	int *disc = new int[nodes];
+	int *low = new int[nodes];
+	bool *stackMember = new bool[nodes];
+	std::stack<long long> *st = new std::stack<long long>();
+	for (int i = 0; i < nodes; i++) {
+		disc[i] = NIL;
+		low[i] = NIL;
+		stackMember[i] = false;
+	}
+	for (int i = 0; i < nodes; i++)
+		if (disc[i] == NIL)
+			SCCUtil(i, disc, low, st, stackMember);
 }

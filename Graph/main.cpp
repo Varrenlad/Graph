@@ -4,8 +4,8 @@
 
 int main() {
 	size_t source;
-	std::string filename;
-	std::cin >> filename;
+	std::string filename = "soc-slashdot0902.txt";
+	//std::cin >> filename;
 	std::ifstream st;
 	st.open(filename);
 	Vertix v;
@@ -17,7 +17,7 @@ int main() {
 		std::cin.get();
 		std::cin.get();
 		exit(EXIT_FAILURE);
-	}
+	}/*
 	std::cout << "Select node to measure distance" << std::endl;
 	std::cin >> source;
 	//v.Show();
@@ -29,6 +29,7 @@ int main() {
 	for (size_t i = 1; i <= v.Size(); i++) {
 		of << "Vertex: " << i << ", Distance: ";
 		v[i] != SIZE_MAX ? (of << v[i] << std::endl) : (of << "-1" << std::endl);
-	}
+	}*/
+	v.SCC();
 	return EXIT_SUCCESS;
 }
