@@ -2,6 +2,14 @@
 
 #include "common.h"
 
+struct recstack{
+	int u;
+	int *disc;
+	int *low;
+	std::stack<long long> *st;
+	bool *stackMember;
+};
+
 class Vertix {
 	std::vector<std::pair<size_t, size_t>> *adj;
 	std::list<long long> *adjL;
@@ -9,9 +17,7 @@ class Vertix {
 	size_t nodes = 0;
 	size_t edges = 0;
 	size_t *distArr;
-	void SCCUtil(int, int[], int[], 
-		std::stack<long long> *, bool[]);
-	void _SCC();
+	std::stack<recstack> recurse;
 public:
 	Vertix();
 	size_t Size();
@@ -19,7 +25,8 @@ public:
 	void Load(std::istream &);
 	void Dijkstra(size_t);
 	void Show();
-	void SCC();
+	void Tarjan();
+
 	~Vertix();
 };
 

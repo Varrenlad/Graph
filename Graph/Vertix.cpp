@@ -95,64 +95,49 @@ size_t Vertix::operator[](size_t i) {
 	return distArr[i];
 }
 
-void Vertix::SCC() {
-	std::vector<long long> *temp = new std::vector<long long>[nodes];
-	size_t i;
-	for (i = 0; i < nodes; ++i) {
-		for (size_t j = 0; j < adj[i].size(); ++j) {
-			temp[i].push_back(adj[i][j].first);
-		}
-	}
-	adjL = new std::list<long long>[nodes];
-	for (i = 0; i < nodes; ++i)
-		std::copy(temp[i].begin(), temp[i].end(), std::back_inserter(adjL[i]));
-	delete[] temp;
-	this->_SCC();
-	delete[] adjL;
-}
+//use Tarjan
 
-void Vertix::SCCUtil(int u, int disc[], int low[], std::stack<long long> *st,
-	bool stackMember[]) {
-	static int time = 0;
-	disc[u] = low[u] = ++time;
-	st->push(u);
-	stackMember[u] = true;
-	std::list<long long>::iterator i;
-	for (i = adjL[u].begin(); i != adjL[u].end(); ++i) {
-		long long v = *i;
-		if (disc[v] == -1) {
-			SCCUtil(v, disc, low, st, stackMember);
-			low[u] = std::min(low[u], low[v]);
-		}
-		else if (stackMember[v] == true)
-			low[u] = std::min(low[u], disc[v]);
-	}
-	long long w = 0;
-	if (low[u] == disc[u]) {
-		while (st->top() != u) {
-			w = st->top();
-			std::cout << w << " ";
-			stackMember[w] = false;
-			st->pop();
-		}
-		w = st->top();
-		std::cout << w << "\n";
-		stackMember[w] = false;
-		st->pop();
-	}
-}
+struct Node {
+	size_t id; //Signed int up to 2^31 - 1 = 2,147,483,647
+	size_t index;
+	size_t lowlink;
+	Node *caller;                    //If you were looking at the recursive version, this is the node before the recursive call
+	size_t vindex;             //Equivalent to the iterator in the for-loop in tarjan
+	std::vector<Node *> *nodeVector;      //Vector of adjacent Nodes 
+};
 
-void Vertix::_SCC() {
-	int *disc = new int[nodes];
-	int *low = new int[nodes];
-	bool *stackMember = new bool[nodes];
-	std::stack<long long> *st = new std::stack<long long>();
-	for (int i = 0; i < nodes; i++) {
-		disc[i] = NIL;
-		low[i] = NIL;
-		stackMember[i] = false;
+void Vertix::Tarjan() {
+	delete[] visited;
+	visited = new bool[nodes]();
+	auto index = 0;
+	int ticks, current_scc;
+	int *d = new int[nodes], *low = new int[nodes], *scc = new int[nodes];
+	std::vector<size_t> s; //SCCs go here
+	for (auto vertix = 0; vertix < nodes; ++vertix) {
+		if (visited[vertix])
+			continue; //we skip those already used in SCC
+		d[vertix] = low[vertix] = ticks++;
+		s.push_back(vertix);
+		visited[vertix] = true;
+		const std::vector<std::pair<size_t, size_t>> &out = adj[vertix];
+		for (int k = 0, m = out.size(); k < m; ++k) {
+			const int &v = out[k].first;
+			if (d[v] == -1) {
+				//tarjan(v);
+				low[vertix] = std::min(low[vertix], low[v]);
+			}
+			else if (visited[v]) {
+				low[vertix] = std::min(low[vertix], low[v]);
+			}
+		}
+		if (d[vertix] == low[vertix]) {
+			int v;
+			do {
+				v = s[s.size()];
+				s.pop_back();
+				visited[v] = false;
+				scc[v] = current_scc;
+			} while (vertix != v);
+			current_scc++;
 	}
-	for (int i = 0; i < nodes; i++)
-		if (disc[i] == NIL)
-			SCCUtil(i, disc, low, st, stackMember);
 }
