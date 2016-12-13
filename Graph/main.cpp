@@ -9,7 +9,15 @@ int main() {
 	std::ifstream st;
 	st.open(filename);
 	Vertix v;
-	v.Load(st);
+	try {
+		v.Load(st);
+	}
+	catch (std::exception e) {
+		std::cout << e.what();
+		std::cin.get();
+		std::cin.get();
+		exit(EXIT_FAILURE);
+	}
 	std::cout << "Select node to measure distance" << std::endl;
 	std::cin >> source;
 	//v.Show();
@@ -22,5 +30,5 @@ int main() {
 		of << "Vertex: " << i << ", Distance: ";
 		v[i] != SIZE_MAX ? (of << v[i] << std::endl) : (of << "-1" << std::endl);
 	}
-	return 0;
+	return EXIT_SUCCESS;
 }

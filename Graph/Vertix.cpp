@@ -14,8 +14,8 @@ void Vertix::Load(std::istream &st) {
 	srand(time(NULL));
 #endif
 	size_t temp, temp1, i = 0, j = 0;
-	if (st.rdstate() & std::ios::badbit) {
-		std::exception e("Failed to load data from file, it might be corrupt");
+	if (st.rdstate() & std::ios::failbit) {
+		std::exception e("Failed to load data from file");
 		throw e;
 	}
 	do {
@@ -31,7 +31,7 @@ void Vertix::Load(std::istream &st) {
 		}
 	} while (!(nodes && edges || st.eof()));
 	if (!nodes) {
-		std::exception e("Cannot find number of nodes");
+		std::exception e("Cannot find number of nodes, data might be corrupt");
 		throw e;
 	}
 	while (!isdigit(temp = st.peek()))
