@@ -1,8 +1,17 @@
 #include "Vertix.h"
 
+void Out(FILE *fPtr, size_t &source, size_t &min, size_t &mean, size_t &max, size_t &e, Vertix &data);
+
+int getNum() {
+	return rand() % RANDOM_ENUM;
+}
+
 Vertix::Vertix(){
 }
 
+Vertix::Vertix(FILE *fPtr) {
+	fPt = fPtr;
+}
 
 Vertix::~Vertix(){
 }
@@ -38,13 +47,14 @@ void Vertix::Load(std::istream &st) {
 		st.get(); //pass remainings of the header
 	adj = new std::vector<std::pair<size_t, size_t>>[nodes];
 	while (!st.eof()) {
+		//aRand = rand() % RANDOM_ENUM;
 		st >> temp >> temp1;
 		i = rand() % RANDOM_ENUM; //alas, we don't have weight, so we generate them
-			adj[temp].push_back(std::make_pair(temp1, i));
-			adj[temp1].push_back(std::make_pair(temp, i));
-			++j;
-			if (j % 10240 == 0)
-				std::cout << "Loading " << j << "/" << edges << "\n";
+		adj[temp].push_back(std::make_pair(temp1, i));
+		adj[temp1].push_back(std::make_pair(temp, i));
+		++j;
+		if (j % 10240 == 0)
+			std::cout << "Loading " << j << "/" << edges << "\n";
 	}
 }
 
@@ -95,27 +105,26 @@ void Vertix::Relief(size_t i) {
 #ifndef ASYNCIO
 void Vertix::FullDijkstra(std::ostream &os) {
 #else
-void Vertix::FullDijkstra(FILE *fPtr) {
+void Vertix::FullDijkstra() {
 #endif
 	size_t i;
-#ifdef ASYNCIO
-	std::future<bool> print;
-#endif
+	size_t min = SIZE_MAX, mean = 0, max = 0, j, e = 0;
+	visited = new bool[nodes];
 	for (i = 0; i < nodes; ++i) {
-		std::cout << "Searching for " << i << " distances";
-		if (distArr)
-			delete[] distArr;
-		distArr = new size_t[nodes];
-		for (size_t i = 0; i < nodes; i++) //Set initial distances to Infinity
-			distArr[i] = SIZE_MAX;
+		std::thread thr(Out, fPt, std::ref(i), std::ref(min), std::ref(mean), std::ref(max), std::ref(e), std::ref(*this));
+		std::cout << "Searching for " << i << " distances\n";
+		distArr = new size_t[nodes]; //we give pointer to save thread and allow it to free data
+		memset(distArr, SIZE_MAX, sizeof(size_t) * nodes);
+		//for (size_t i = 0; i < nodes; i++) //Set initial distances to Infinity
+		//	distArr[i] = SIZE_MAX;
 		if (visited)
-			delete[] visited;
-		visited = new bool[nodes]();
+			memset(visited, 0, sizeof(bool) * nodes);
+			//delete[] visited;
+		//visited = new bool[nodes]();
 		Dijkstra(i);
 #ifndef ASYNCIO
 		Out(os, i);
 #else
-		size_t min = SIZE_MAX, mean = 0, max = 0, j, e = 0;
 		for (j = 0; j < nodes; ++j) {
 			if (j != i) {
 				if (distArr[j] != SIZE_MAX) {
@@ -129,11 +138,8 @@ void Vertix::FullDijkstra(FILE *fPtr) {
 			}
 		}
 		mean /= nodes;
-		std::chrono::milliseconds span(100);
-		while (print.wait_for(span) == std::future_status::timeout) {
-			std::cout << "waiting" << std::endl;
-		}
-		print = Out(fPtr, i, min, mean, max, e);
+		Relief(i);
+		thr.join();
 #endif
 	}
 }
@@ -164,15 +170,17 @@ void Vertix::Out(std::ostream &of, size_t source) {
 	of << std::endl;
 }
 #else
-bool Vertix::Out(FILE *fPtr, size_t source, size_t min, size_t mean, size_t max, size_t e) {
-	size_t *arrCopy = new size_t[nodes];
-	memcpy(arrCopy, distArr, sizeof(size_t) * nodes);
-	fprintf(fPtr, "Source is: %ll \nThere's %ll existing links and %ll non-existing\n \
-The shortest distance is %ll, longest is %ll and mean is %ll\
-\nUnique shortest distance to other vertex from here are: \n", source, e, nodes - e - 1, min, max, mean);
-	for (size_t i = 1; i <= nodes; i++) {
-		fprintf(fPtr, "Vertex: %ll, Distance: %ll\n", source, ((distArr[i] != SIZE_MAX) ? ((distArr[i] == source) ? distArr[i] - 1 : distArr[i]) : -1));
+
+void Out(FILE *fPtr, size_t &source, size_t &min, size_t &mean, size_t &max, size_t &e, Vertix &data) {
+	if (mean == 0)
+		return;
+	size_t *arrCopy = data.distArr; //save pointer to use after renew
+	fprintf(fPtr, "Source is: %zu\nThere's %zu existing links and %zu non-existing\nThe shortest distance is %zu, longest is %zu and mean is %zu\nUnique shortest distance to other vertex from here are:\n", source, e, data.nodes - e - 1, min, max, mean);
+	for (size_t i = 1; i <= data.nodes; i++) {
+		fprintf(fPtr, "Vertex: %zu, Distance: %lld\n", (i != source ? i : i - 1), ((arrCopy[i] != SIZE_MAX) ? arrCopy[i] : -1));
 	}
-	return true;
+	delete[] arrCopy;
+	fflush(fPtr);
 }
+
 #endif

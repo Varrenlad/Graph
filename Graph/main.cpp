@@ -8,8 +8,10 @@ int main() {
 	std::string filename = "soc-slashdot0902.txt";
 	//std::cin >> filename;
 	std::ifstream st;
+	FILE *fp;
+	fopen_s(&fp, "dijkstrra.txt", "w");
 	st.open(filename);
-	Vertix v;
+	Vertix v(fp);
 	try {
 		v.Load(st);
 	}
@@ -25,8 +27,8 @@ int main() {
 	v.FullDijkstra(of);
 	of.close();
 #else
-	hFile = CreateFile("djikstra.txt", GENERIC_WRITE, FILE_SHARE_READ,
-		NULL, CREATE_ALWAYS, FILE_FLAG_OVERLAPPED, NULL);
+	v.FullDijkstra();
+
 
 #endif
 	return EXIT_SUCCESS;

@@ -6,9 +6,9 @@
 #define ASYNCIO
 
 #ifdef ASYNCIO
-#include <future>
+#include <functional>
 #include <cstdio>
-#include <chrono>
+#include <thread>
 #endif
 
 #include <vector>
