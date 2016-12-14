@@ -2,31 +2,30 @@
 
 #include "common.h"
 
-struct recstack{
-	int u;
-	int *disc;
-	int *low;
-	std::stack<long long> *st;
-	bool *stackMember;
-};
-
 class Vertix {
 	std::vector<std::pair<size_t, size_t>> *adj;
-	std::list<long long> *adjL;
 	bool *visited;
 	size_t nodes = 0;
 	size_t edges = 0;
 	size_t *distArr;
-	std::stack<recstack> recurse;
+	void Dijkstra(size_t);
+	void Relief(size_t);
+#ifdef ASYNCIO
+	bool lock = false;
+	bool Out(FILE *fPtr, size_t, size_t, size_t, size_t, size_t);
+#else
+	void Out(std::ostream &, size_t source);
+#endif
 public:
 	Vertix();
 	size_t Size();
-	size_t operator[](size_t i);
 	void Load(std::istream &);
-	void Dijkstra(size_t);
-	void Show();
-	void Tarjan();
-
+	void Show(size_t);
+#ifndef ASYNCIO
+	void FullDijkstra(std::ostream &);
+#else
+	void FullDijkstra(FILE *);
+#endif
 	~Vertix();
 };
 

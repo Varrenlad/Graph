@@ -4,6 +4,7 @@
 
 int main() {
 	size_t source;
+	std::ios_base::sync_with_stdio(false);
 	std::string filename = "soc-slashdot0902.txt";
 	//std::cin >> filename;
 	std::ifstream st;
@@ -17,19 +18,16 @@ int main() {
 		std::cin.get();
 		std::cin.get();
 		exit(EXIT_FAILURE);
-	}/*
-	std::cout << "Select node to measure distance" << std::endl;
-	std::cin >> source;
-	//v.Show();
-	v.Dijkstra(source);
+	}
+#ifndef ASYNCIO
 	std::ofstream of;
 	of.open("dijkstra.txt");
-	of << "Source is: " << source 
-		<< ". The shortest distance to every other vertex from here is: " << std::endl;
-	for (size_t i = 1; i <= v.Size(); i++) {
-		of << "Vertex: " << i << ", Distance: ";
-		v[i] != SIZE_MAX ? (of << v[i] << std::endl) : (of << "-1" << std::endl);
-	}*/
-	v.SCC();
+	v.FullDijkstra(of);
+	of.close();
+#else
+	hFile = CreateFile("djikstra.txt", GENERIC_WRITE, FILE_SHARE_READ,
+		NULL, CREATE_ALWAYS, FILE_FLAG_OVERLAPPED, NULL);
+
+#endif
 	return EXIT_SUCCESS;
 }
