@@ -79,9 +79,9 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <WarningLevel>Level4</WarningLevel>
-      <Optimization>MaxSpeed</Optimization>
+      <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <WholeProgramOptimization>true</WholeProgramOptimization>
+      <WholeProgramOptimization>false</WholeProgramOptimization>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -113,10 +113,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Timer.cpp" />
     <ClCompile Include="Vertix.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="common.h" />
+    <ClInclude Include="Timer.h" />
     <ClInclude Include="Vertix.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

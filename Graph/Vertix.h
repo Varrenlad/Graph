@@ -3,6 +3,7 @@
 #include "common.h"
 
 class Vertix {
+	FILE *log;
 	std::vector<std::pair<size_t, size_t>> *adj;
 	bool *visited;
 	size_t nodes = 0;
