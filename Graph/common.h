@@ -1,4 +1,5 @@
 #pragma once
+#pragma warning(disable:4996) //fopen_s gives us nullptr somewhy
 
 #define RANDOM_ENUM 100
 #define TIMERAND
@@ -9,6 +10,7 @@
 #include <functional>
 #include <cstdio>
 #include <thread>
+#include <cassert>
 #endif
 
 #include <vector>

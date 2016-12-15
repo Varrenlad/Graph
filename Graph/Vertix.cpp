@@ -1,16 +1,12 @@
 #include "Vertix.h"
 
-void Out(FILE *fPtr, size_t &source, size_t &min, size_t &mean, size_t &max, size_t &e, Vertix &data);
+void Out(size_t &source, size_t &min, size_t &mean, size_t &max, size_t &e, size_t &nodes, size_t *arrCopy);
 
 int getNum() {
 	return rand() % RANDOM_ENUM;
 }
 
 Vertix::Vertix(){
-}
-
-Vertix::Vertix(FILE *fPtr) {
-	fPt = fPtr;
 }
 
 Vertix::~Vertix(){
@@ -49,7 +45,7 @@ void Vertix::Load(std::istream &st) {
 	while (!st.eof()) {
 		//aRand = rand() % RANDOM_ENUM;
 		st >> temp >> temp1;
-		i = rand() % RANDOM_ENUM; //alas, we don't have weight, so we generate them
+		i = rand() % RANDOM_ENUM + 1; //alas, we don't have weight, so we generate them
 		adj[temp].push_back(std::make_pair(temp1, i));
 		adj[temp1].push_back(std::make_pair(temp, i));
 		++j;
@@ -102,29 +98,26 @@ void Vertix::Relief(size_t i) {
 	adj[i].clear();
 }
 
-#ifndef ASYNCIO
-void Vertix::FullDijkstra(std::ostream &os) {
-#else
 void Vertix::FullDijkstra() {
-#endif
 	size_t i;
-	size_t min = SIZE_MAX, mean = 0, max = 0, j, e = 0;
+	size_t min = 0, mean = 0, max = 0, j, e = 0;
 	visited = new bool[nodes];
 	for (i = 0; i < nodes; ++i) {
-		std::thread thr(Out, fPt, std::ref(i), std::ref(min), std::ref(mean), std::ref(max), std::ref(e), std::ref(*this));
+		std::thread thr(Out, std::ref(i), std::ref(min), std::ref(mean), 
+			std::ref(max), std::ref(e), std::ref(nodes), std::ref(distArr));
+		//if (i % 100) //we will sync every 100 threads to keep ram consumption low
+		//	thr.detach();
+		
 		std::cout << "Searching for " << i << " distances\n";
-		distArr = new size_t[nodes]; //we give pointer to save thread and allow it to free data
-		memset(distArr, SIZE_MAX, sizeof(size_t) * nodes);
-		//for (size_t i = 0; i < nodes; i++) //Set initial distances to Infinity
-		//	distArr[i] = SIZE_MAX;
 		if (visited)
 			memset(visited, 0, sizeof(bool) * nodes);
-			//delete[] visited;
-		//visited = new bool[nodes]();
+		distArr = new size_t[nodes]; //we give pointer to save thread and allow it to free data
+		memset(distArr, SIZE_MAX, sizeof(size_t) * nodes);
 		Dijkstra(i);
-#ifndef ASYNCIO
-		Out(os, i);
-#else
+		min = SIZE_MAX;
+		mean = 0;
+		max = 0;
+		e = 0;
 		for (j = 0; j < nodes; ++j) {
 			if (j != i) {
 				if (distArr[j] != SIZE_MAX) {
@@ -138,49 +131,27 @@ void Vertix::FullDijkstra() {
 			}
 		}
 		mean /= nodes;
-		Relief(i);
+		//Relief(i);
 		thr.join();
-#endif
 	}
 }
-#ifndef ASYNCIO
-void Vertix::Out(std::ostream &of, size_t source) {
-	size_t min = SIZE_MAX, mean = 0, max = 0, i, e = 0;
-	of << "Source is: " << source;
-	for (i = 0; i < nodes; ++i) {
-		if (i != source) {
-			if (distArr[i] != SIZE_MAX) {
-				++e;
-				mean += distArr[i];
-				if (distArr[i] < min)
-					min = distArr[i];
-				if (distArr[i] > max)
-					max = distArr[i];
-			}
-		}
-	}
-	mean /= nodes;
-	of << "\nThere's " << e << " existing links and " << nodes - e - 1 << " non-existing\n";
-	of << "The shortest distance is " << min << ", longest is " << max << " and mean is " << mean;
-	of << "\nUnique shortest distance to other vertex from here is: \n";
-	for (i = 1; i <= Size(); i++) {
-		of << "Vertex: " << i << ", Distance: ";
-		distArr[i] != SIZE_MAX ? (of << ((distArr[i] == source) ? distArr[i] - 1 : distArr[i]) << "\n") : (of << "-1" << "\n");
-	}
-	of << std::endl;
-}
-#else
 
-void Out(FILE *fPtr, size_t &source, size_t &min, size_t &mean, size_t &max, size_t &e, Vertix &data) {
+void Out(size_t &source, size_t &min, size_t &mean, size_t &max, size_t &e, size_t &nodes, size_t *arrCopy) {
 	if (mean == 0)
 		return;
-	size_t *arrCopy = data.distArr; //save pointer to use after renew
-	fprintf(fPtr, "Source is: %zu\nThere's %zu existing links and %zu non-existing\nThe shortest distance is %zu, longest is %zu and mean is %zu\nUnique shortest distance to other vertex from here are:\n", source, e, data.nodes - e - 1, min, max, mean);
-	for (size_t i = 1; i <= data.nodes; i++) {
-		fprintf(fPtr, "Vertex: %zu, Distance: %lld\n", (i != source ? i : i - 1), ((arrCopy[i] != SIZE_MAX) ? arrCopy[i] : -1));
+	FILE *fPtr;
+	char *filename = new char[FILENAME_MAX];
+	sprintf(filename, "Node %zu links.txt", source - 1);
+	fPtr = fopen(filename, "w");
+	assert(fPtr != nullptr);
+	assert(source < 89000);
+	fprintf(fPtr, "Source is: %zu\nThere's %zu existing links and %zu non-existing\nThe shortest distance is %zu, longest is %zu and mean is %zu\nUnique shortest distance to other vertex from here are:\n", source - 1, e, nodes - e - 1, min, max, mean);
+	for (size_t i = 0; i < source - 1; i++) {
+		fprintf(fPtr, "Vertex: %zu, Distance: %lld\n", i, ((arrCopy[i] != SIZE_MAX) ? arrCopy[i] : -1));
+	} //needed to passthrough our source node
+	for (size_t i = source; i <= nodes; i++) {
+		fprintf(fPtr, "Vertex: %zu, Distance: %lld\n", i, ((arrCopy[i] != SIZE_MAX) ? arrCopy[i] : -1));
 	}
-	delete[] arrCopy;
-	fflush(fPtr);
+	delete[] arrCopy; //free ram
+	fclose(fPtr); 
 }
-
-#endif
