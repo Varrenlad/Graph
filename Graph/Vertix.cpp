@@ -101,6 +101,8 @@ void Vertix::Relief(size_t i) {
 }
 
 void Vertix::FullDijkstra() {
+	if (!nodes || !edges)
+		throw EXC_NO_DATA;
 	size_t i;
 	size_t min = 0, mean = 0, max = 0, j, e = 0;
 	visited = new bool[nodes];
@@ -152,8 +154,8 @@ void Out(size_t &source, size_t &min, size_t &mean, size_t &max, size_t &e, size
 	char *filename = new char[FILENAME_MAX];
 	sprintf(filename, "Node %zu links.txt", source - 1);
 	fPtr = fopen(filename, "w");
-	assert(fPtr != nullptr);
-	assert(source < 89000);
+	if (fPtr == nullptr)
+		return;
 	fprintf(fPtr, "# Source is: %zu\n# There's %zu existing links and %zu non-existing\n# The shortest distance is %zu, longest is %zu and mean is %zu\n# Unique shortest distance to other vertex from here are:\n", source - 1, e, nodes - e - 1, min, max, mean);
 	fprintf(fPtr, "# Vertex\tDistance\n");
 	for (size_t i = 0; i < source - 1; i++) {
